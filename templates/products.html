@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Produtos{% endblock %}
+{% block content %}
+<div class="page-title"><i class="bi bi-box-seam"></i>Produtos</div>
+
+<div class="row g-4">
+  <div class="col-12 col-md-4">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-plus-circle me-2" style="color:var(--tg)"></i>Novo Produto</div>
+      <div class="card-body p-4">
+        <form method="post" action="{{ url_for('product_add') }}">
+          <div class="mb-3">
+            <label class="form-label">Nome do produto</label>
+            <input type="text" name="name" class="form-control" placeholder="Ex: VIP Mensal" required>
+          </div>
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label mb-0">Duracao</label>
+              <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" id="lifeToggle" name="lifetime" value="1" onchange="toggleLife(this)">
+                <label class="form-check-label" for="lifeToggle" style="color:var(--tg);font-size:.8rem;font-weight:700">&infin; Vitalicio</label>
+              </div>
+            </div>
+            <div class="input-group">
+              <input type="number" name="days" id="daysInput" class="form-control" value="30" min="1" max="3650">
+              <span class="input-group-text">dias</span>
+            </div>
+          </div>
+
+          {% if groups %}
+          <div class="mb-3">
+            <label class="form-label">Grupo do Telegram</label>
+            <select name="group_id" class="form-select">
+              <option value="">— Grupo padrao —</option>
+              {% for g in groups %}
+              <option value="{{ g.id }}">{{ g.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endif %}
+
+          <div class="mb-4">
+            <label class="form-label">Observacao <span style="color:var(--muted)">(opcional)</span></label>
+            <input type="text" name="note" class="form-control" placeholder="Nota interna">
+          </div>
+
+          <button type="submit" class="btn btn-tg w-100 py-2">
+            <i class="bi bi-box-seam me-1"></i>Criar Produto
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-8">
+    <div class="card">
+      <div class="card-header">Produtos Cadastrados</div>
+      {% if products %}
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nome</th>
+              <th>Duracao</th>
+              <th>Grupo</th>
+              <th>Observacao</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in products %}
+            <tr>
+              <td style="color:var(--muted)">{{ p.id }}</td>
+              <td style="font-weight:600">{{ p.name }}</td>
+              <td>
+                {% if p.days == 0 %}
+                <span class="badge b-lifetime">&infin; Vitalicio</span>
+                {% else %}
+                <span style="color:var(--tg);font-weight:600">{{ p.days }}d</span>
+                {% endif %}
+              </td>
+              <td style="color:var(--sub)">{{ p.group_name or '(padrao)' }}</td>
+              <td style="color:var(--muted)">{{ p.note or '—' }}</td>
+              <td>
+                {% if p.active %}
+                <span class="badge b-active">Ativo</span>
+                {% else %}
+                <span class="badge b-expired">Inativo</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <form method="post" action="{{ url_for('product_toggle', pid=p.id) }}" class="d-inline">
+                  <button class="btn btn-sm btn-otg" title="Ativar/Desativar">
+                    <i class="bi bi-toggle-{% if p.active %}on{% else %}off{% endif %}"></i>
+                  </button>
+                </form>
+                <form method="post" action="{{ url_for('product_delete', pid=p.id) }}" class="d-inline"
+                      onsubmit="return confirm('Remover produto {{ p.name }}?')">
+                  <button class="btn btn-sm" style="color:#ff7070;border:1px solid rgba(255,100,100,.3);border-radius:8px" title="Excluir">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="card-body text-center py-5" style="color:var(--muted)">
+        <i class="bi bi-box-seam" style="font-size:2.5rem;display:block;margin-bottom:12px;opacity:.4"></i>
+        Nenhum produto cadastrado ainda.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleLife(cb) {
+  const d = document.getElementById('daysInput');
+  d.disabled = cb.checked;
+  d.value = cb.checked ? '' : 30;
+}
+</script>
+{% endblock %}

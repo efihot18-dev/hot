@@ -1,0 +1,136 @@
+﻿{% extends "base.html" %}
+{% block title %}Links{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="page-title mb-0"><i class="bi bi-list-ul"></i>Todos os Links</div>
+  <div class="d-flex gap-2">
+    <button class="btn btn-otg btn-sm px-3" onclick="copyAllLinks()" id="copyAllBtn" {% if not rows %}disabled{% endif %}>
+      <i class="bi bi-clipboard me-1"></i>Copiar Todos
+    </button>
+    <a href="{{ url_for('generate') }}" class="btn btn-tg btn-sm px-3">
+      <i class="bi bi-plus me-1"></i>Gerar Novos
+    </a>
+  </div>
+</div>
+
+<div class="mb-3 d-flex gap-2 flex-wrap align-items-center">
+  <a href="?status=all"       class="btn btn-sm {% if status_filter=='all' %}btn-tg{% else %}btn-otg{% endif %}">Todos</a>
+  <a href="?status=available" class="btn btn-sm {% if status_filter=='available' %}btn-tg{% else %}btn-otg{% endif %}">Disponiveis</a>
+  <a href="?status=active"    class="btn btn-sm {% if status_filter=='active' %}btn-tg{% else %}btn-otg{% endif %}">Ativos</a>
+  <a href="?status=expired"   class="btn btn-sm {% if status_filter=='expired' %}btn-tg{% else %}btn-otg{% endif %}">Expirados</a>
+  <a href="?status=lifetime"  class="btn btn-sm {% if status_filter=='lifetime' %}btn-tg{% else %}btn-otg{% endif %}">Vitalicios</a>
+  <span style="color:var(--muted);font-size:.78rem;margin-left:auto">{{ rows|length }} link(s)</span>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr>
+        <th>#</th>
+        <th>Link</th>
+        <th>Duracao</th>
+        <th>Status</th>
+        <th>Usuario Telegram</th>
+        <th>Usado em</th>
+        <th>Expira em</th>
+        <th>Nota</th>
+        <th>Acoes</th>
+      </tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td style="color:var(--muted)">{{ r['id'] }}</td>
+          <td>
+            <div class="input-group input-group-sm" style="min-width:220px">
+              <input type="text" class="form-control" style="font-size:.78rem" value="{{ base_url }}/acesso/{{ r['token'] }}" readonly>
+              <button class="btn btn-otg" onclick="cpLink('{{ base_url }}/acesso/{{ r['token'] }}', this)">
+                <i class="bi bi-copy"></i>
+              </button>
+            </div>
+          </td>
+          <td>
+            {% if r['days'] == 0 %}
+              <span class="badge b-lifetime">&infin; Vitalicio</span>
+            {% else %}
+              <span style="color:var(--sub)">{{ r['days'] }}d</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if r['kicked'] %}<span class="badge b-expired">Expirado</span>
+            {% elif r['used'] %}<span class="badge b-active">Ativo</span>
+            {% else %}<span class="badge b-avail">Disponivel</span>{% endif %}
+          </td>
+          <td>
+            {% if r['telegram_username'] %}
+              <span style="color:var(--tg)">@{{ r['telegram_username'] }}</span>
+              <small style="color:var(--muted);display:block;font-size:.7rem">{{ r['telegram_user_id'] }}</small>
+            {% else %}<span style="color:var(--muted)">&mdash;</span>{% endif %}
+          </td>
+          <td style="color:var(--muted);font-size:.82rem">{{ r['used_at'][:16] if r['used_at'] else '&mdash;' }}</td>
+          <td style="font-size:.82rem">
+            {% if r['days'] == 0 %}
+              <span style="color:#b794ff">&infin;</span>
+            {% elif r['expires_at'] %}
+              {% if r['kicked'] %}<span style="color:var(--muted)">{{ r['expires_at'][:10] }}</span>
+              {% else %}<span style="color:#f5a623">{{ r['expires_at'][:10] }}</span>{% endif %}
+            {% else %}<span style="color:var(--muted)">&mdash;</span>{% endif %}
+          </td>
+          <td style="color:var(--muted);font-size:.82rem">{{ r['note'] or '&mdash;' }}</td>
+          <td>
+            {% if r['used'] and not r['kicked'] %}
+            <form method="post" action="{{ url_for('revoke', link_id=r['id']) }}"
+                  onsubmit="return confirm('Remover @{{ r.telegram_username }} do grupo?')">
+              <button class="btn btn-sm" style="background:rgba(245,166,35,.15);color:#f5a623;border:1px solid rgba(245,166,35,.3)" title="Revogar">
+                <i class="bi bi-person-dash-fill"></i>
+              </button>
+            </form>
+            {% elif not r['used'] %}
+            <form method="post" action="{{ url_for('delete_link', link_id=r['id']) }}"
+                  onsubmit="return confirm('Deletar este link?')">
+              <button class="btn btn-sm" style="background:rgba(255,100,100,.12);color:#ff7070;border:1px solid rgba(255,100,100,.25)" title="Deletar">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
+            {% else %}
+            <span style="color:var(--muted)">&mdash;</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9" class="text-center py-5" style="color:var(--muted)">Nenhum link encontrado.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+function cpLink(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.innerHTML = '<i class="bi bi-check2"></i>';
+    setTimeout(() => btn.innerHTML = '<i class="bi bi-copy"></i>', 1500);
+  });
+}
+
+function copyAllLinks() {
+  const inputs = document.querySelectorAll('table tbody input[type="text"]');
+  if (!inputs.length) return;
+  const links = [...inputs].map(i => i.value).join('\n');
+  const btn = document.getElementById('copyAllBtn');
+  navigator.clipboard.writeText(links).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-check2 me-1"></i>' + inputs.length + ' copiado(s)!';
+    btn.classList.remove('btn-otg');
+    btn.classList.add('btn-tg');
+    setTimeout(() => {
+      btn.innerHTML = orig;
+      btn.classList.remove('btn-tg');
+      btn.classList.add('btn-otg');
+    }, 2000);
+  }).catch(() => {
+    // Fallback: show in prompt
+    prompt('Copie os links:', links);
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block title %}Webhook Discord{% endblock %}
+{% block content %}
+<div class="page-title"><i class="bi bi-discord"></i>Webhook — Integracao com Discord</div>
+
+<div class="row g-4">
+
+  <!-- Info + endpoint -->
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-lightning-charge me-2" style="color:var(--tg)"></i>Endpoint de Compra Automatica</div>
+      <div class="card-body p-4">
+        <p style="color:var(--sub)">
+          Configure seu bot do Discord para chamar este endpoint sempre que uma venda for confirmada.
+          O sistema gera automaticamente o link de acesso e retorna no JSON.
+        </p>
+        <div class="row g-3 mb-3">
+          <div class="col-auto"><span class="badge" style="background:rgba(61,199,123,.2);color:#3dc77b;border:1px solid rgba(61,199,123,.3);font-size:.85rem;padding:.5em .9em">POST</span></div>
+          <div class="col">
+            <code style="font-size:.95rem">{{ base_url }}/api/purchase</code>
+            <button class="btn btn-sm btn-otg ms-2" onclick="navigator.clipboard.writeText('{{ base_url }}/api/purchase').then(()=>alert('Copiado!'))">
+              <i class="bi bi-copy"></i>
+            </button>
+          </div>
+        </div>
+        <div style="background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:10px;padding:14px 18px;color:var(--muted);font-size:.8rem">
+          <strong style="color:var(--sub)">Header obrigatorio:</strong><br>
+          <code>Authorization: Bearer &lt;sua_api_key&gt;</code>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payload + Resposta -->
+  <div class="col-12 col-md-6">
+    <div class="card h-100">
+      <div class="card-header">Payload (JSON)</div>
+      <div class="card-body p-4">
+        <pre style="background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:10px;padding:18px;color:#79c0ff;font-size:.83rem;margin:0">{
+  "product_id": 1,
+  "discord_user": "NomeDoComprador#0001",
+  "quantity": 1
+}</pre>
+        <table class="table table-sm mt-3 mb-0">
+          <thead><tr><th>Campo</th><th>Tipo</th><th>Descricao</th></tr></thead>
+          <tbody>
+            <tr><td><code>product_id</code></td><td>int</td><td>ID do produto cadastrado</td></tr>
+            <tr><td><code>discord_user</code></td><td>string</td><td>Nome do comprador (para log)</td></tr>
+            <tr><td><code>quantity</code></td><td>int</td><td>Quantidade de links (padrao 1)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6">
+    <div class="card h-100">
+      <div class="card-header">Resposta (201 Created)</div>
+      <div class="card-body p-4">
+        <pre style="background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:10px;padding:18px;color:#79c0ff;font-size:.83rem;margin:0">{
+  "ok": true,
+  "product": "VIP Mensal",
+  "days": 30,
+  "quantity": 1,
+  "links": [
+    "http://seu-host/acesso/AbCdEfGhIjKl..."
+  ]
+}</pre>
+        <div class="alert alert-warning mt-3 mb-0" style="font-size:.82rem">
+          <i class="bi bi-exclamation-triangle-fill me-1"></i>
+          Envie os links ao comprador imediatamente — eles sao de uso unico e nao exibidos novamente no painel.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exemplos de codigo -->
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">Exemplos de Integracao</div>
+      <div class="card-body p-4">
+        <ul class="nav nav-tabs mb-3" id="tabEx">
+          <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-python">Python</button></li>
+          <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-js">JavaScript (discord.js)</button></li>
+          <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-curl">cURL</button></li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="tab-python">
+<pre style="background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:10px;padding:18px;color:#79c0ff;font-size:.83rem;margin:0">import requests
+
+API_URL = "{{ base_url }}/api/purchase"
+API_KEY = "sk_..."   # coloque sua API key aqui
+
+def gerar_acesso(product_id, discord_user, quantity=1):
+    resp = requests.post(
+        API_URL,
+        headers={"Authorization": f"Bearer {API_KEY}"},
+        json={
+            "product_id": product_id,
+            "discord_user": discord_user,
+            "quantity": quantity,
+        },
+        timeout=15,
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    return data["links"]   # lista de links de acesso
+
+# Exemplo de uso
+links = gerar_acesso(product_id=1, discord_user="User#1234")
+print(links[0])  # envie este link para o comprador via DM
+</pre>
+          </div>
+          <div class="tab-pane fade" id="tab-js">
+<pre style="background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:10px;padding:18px;color:#79c0ff;font-size:.83rem;margin:0">// discord.js v14 — exemplo em comando slash / evento de compra
+const API_URL = "{{ base_url }}/api/purchase";
+const API_KEY = "sk_...";  // coloque sua API key aqui
+
+async function gerarAcesso(productId, discordUser, quantity = 1) {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${API_KEY}`,
+    },
+    body: JSON.stringify({
+      product_id: productId,
+      discord_user: discordUser,
+      quantity,
+    }),
+  });
+  if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
+  const data = await res.json();
+  return data.links; // array de links
+}
+
+// No handler de compra / slash command:
+const links = await gerarAcesso(1, interaction.user.tag);
+await interaction.user.send(`Seu acesso: ${links[0]}`);
+</pre>
+          </div>
+          <div class="tab-pane fade" id="tab-curl">
+<pre style="background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:10px;padding:18px;color:#79c0ff;font-size:.83rem;margin:0">curl -X POST {{ base_url }}/api/purchase \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk_..." \
+  -d '{"product_id": 1, "discord_user": "User#1234", "quantity": 1}'
+</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabela de Produtos disponíveis -->
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">Produtos Disponiveis <span style="color:var(--muted);font-size:.8rem;font-weight:400">(use o ID no campo product_id)</span></div>
+      {% if products %}
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr><th>ID</th><th>Nome</th><th>Duracao</th><th>Grupo</th></tr>
+          </thead>
+          <tbody>
+            {% for p in products %}
+            <tr>
+              <td>
+                <code>{{ p.id }}</code>
+                <button class="btn btn-sm btn-otg ms-1" onclick="navigator.clipboard.writeText('{{ p.id }}')" title="Copiar ID">
+                  <i class="bi bi-copy" style="font-size:.7rem"></i>
+                </button>
+              </td>
+              <td style="font-weight:600">{{ p.name }}</td>
+              <td>{% if p.days == 0 %}<span class="badge b-lifetime">&infin; Vitalicio</span>{% else %}{{ p.days }} dias{% endif %}</td>
+              <td style="color:var(--sub)">{{ p.group_name or '(padrao)' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="card-body text-center py-4" style="color:var(--muted)">
+        Nenhum produto ativo. <a href="{{ url_for('products') }}">Crie um produto</a> primeiro.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- API Keys disponiveis -->
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">API Keys Ativas</div>
+      {% if keys %}
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr><th>Rotulo</th><th>Chave</th><th>Criada em</th></tr>
+          </thead>
+          <tbody>
+            {% for k in keys if k.active %}
+            <tr>
+              <td style="font-weight:600">{{ k.label }}</td>
+              <td>
+                <code style="font-size:.75rem">{{ k.key }}</code>
+                <button class="btn btn-sm btn-otg ms-2" onclick="navigator.clipboard.writeText('{{ k.key }}').then(()=>{})" title="Copiar">
+                  <i class="bi bi-copy" style="font-size:.7rem"></i>
+                </button>
+              </td>
+              <td style="color:var(--muted);font-size:.8rem">{{ k.created_at[:16] }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="card-body text-center py-4" style="color:var(--muted)">
+        Nenhuma API key ativa. <a href="{{ url_for('apikeys') }}">Crie uma chave</a> primeiro.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<style>
+.nav-tabs { border-color: var(--border); }
+.nav-tabs .nav-link { color: var(--sub) !important; border: none; border-bottom: 2px solid transparent; border-radius: 0 !important; padding: 8px 16px; }
+.nav-tabs .nav-link.active { color: var(--tg) !important; border-bottom-color: var(--tg); background: none; }
+.nav-tabs .nav-link:hover { color: #fff !important; background: rgba(255,255,255,.04); }
+</style>
+{% endblock %}

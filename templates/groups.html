@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Grupos{% endblock %}
+{% block content %}
+<div class="page-title"><i class="bi bi-people"></i>Grupos do Telegram</div>
+
+<div class="row g-4">
+  <div class="col-12 col-md-4">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-plus-circle me-2" style="color:var(--tg)"></i>Adicionar Grupo</div>
+      <div class="card-body p-4">
+        <form method="post" action="{{ url_for('group_add') }}">
+          <div class="mb-3">
+            <label class="form-label">Nome do grupo</label>
+            <input type="text" name="name" class="form-control" placeholder="Ex: VIP Mensal" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">ID do grupo Telegram</label>
+            <input type="text" name="telegram_group_id" class="form-control" placeholder="-1001234567890" required>
+            <div class="form-text">Use numero negativo para supergrupos. Adicione o bot como admin do grupo.</div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label">Descricao <span style="color:var(--muted)">(opcional)</span></label>
+            <input type="text" name="description" class="form-control" placeholder="Ex: Grupo VIP — plano mensal">
+          </div>
+          <button type="submit" class="btn btn-tg w-100 py-2">
+            <i class="bi bi-people-fill me-1"></i>Adicionar Grupo
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mt-3 p-3" style="background:rgba(245,166,35,.07);border-color:rgba(245,166,35,.2)">
+      <div class="sb-group-label mb-1" style="color:#f5a623"><i class="bi bi-info-circle me-1"></i>Grupo padrao (config.py)</div>
+      <div style="color:#f5a623;font-weight:600;font-size:.85rem">{{ group_id }}</div>
+      <div class="form-text mt-1">Links sem grupo associado usam este ID.</div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-8">
+    <div class="card">
+      <div class="card-header">Grupos Cadastrados</div>
+      {% if groups %}
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nome</th>
+              <th>ID Telegram</th>
+              <th>Descricao</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for g in groups %}
+            <tr>
+              <td style="color:var(--muted)">{{ g.id }}</td>
+              <td style="font-weight:600">{{ g.name }}</td>
+              <td><code>{{ g.telegram_group_id }}</code></td>
+              <td style="color:var(--sub)">{{ g.description or '—' }}</td>
+              <td>
+                {% if g.active %}
+                <span class="badge b-active">Ativo</span>
+                {% else %}
+                <span class="badge b-expired">Inativo</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <form method="post" action="{{ url_for('group_toggle', gid=g.id) }}" class="d-inline">
+                  <button class="btn btn-sm btn-otg" title="Ativar/Desativar">
+                    <i class="bi bi-toggle-{% if g.active %}on{% else %}off{% endif %}"></i>
+                  </button>
+                </form>
+                <form method="post" action="{{ url_for('group_delete', gid=g.id) }}" class="d-inline"
+                      onsubmit="return confirm('Remover grupo {{ g.name }}?')">
+                  <button class="btn btn-sm" style="color:#ff7070;border:1px solid rgba(255,100,100,.3);border-radius:8px" title="Excluir">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="card-body text-center py-5" style="color:var(--muted)">
+        <i class="bi bi-people" style="font-size:2.5rem;display:block;margin-bottom:12px;opacity:.4"></i>
+        Nenhum grupo cadastrado ainda.<br>
+        <span style="font-size:.85rem">Adicione grupos para usar em produtos e links.</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

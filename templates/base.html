@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Painel{% endblock %} — SubManager</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --tg:      #2AABEE;
+      --tg2:     #1a94d6;
+      --dark:    #17212b;
+      --card:    #1c2733;
+      --border:  #2a3a4a;
+      --muted:   #7d9ab5;
+      --text:    #e8f0f8;
+      --sub:     #a8bfd0;
+      --bg:      #0f1923;
+    }
+    * { box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; }
+
+    /* SIDEBAR */
+    .sidebar { min-height: 100vh; width: 240px; min-width: 240px; background: var(--dark); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+    .sb-brand { padding: 18px 16px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .sb-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--tg); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; color: #fff; flex-shrink: 0; }
+    .sb-title { font-weight: 700; font-size: .95rem; color: #fff; line-height: 1.2; }
+    .sb-sub { font-size: .7rem; color: var(--muted); }
+    .sb-group { margin: 10px 10px 0; background: rgba(42,171,238,.1); border: 1px solid rgba(42,171,238,.22); border-radius: 10px; padding: 8px 12px; }
+    .sb-group-label { font-size: .67rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+    .sb-group-val { font-size: .78rem; color: var(--tg); font-weight: 600; word-break: break-all; }
+    .sb-nav { padding: 10px 8px; flex: 1; }
+    .nav-link { color: var(--sub) !important; padding: 9px 12px !important; border-radius: 8px !important; display: flex; align-items: center; gap: 10px; font-size: .875rem; transition: all .15s; }
+    .nav-link:hover { background: rgba(255,255,255,.06) !important; color: #fff !important; }
+    .nav-link.active { background: rgba(42,171,238,.16) !important; color: var(--tg) !important; font-weight: 600; }
+    .nav-link .bi { font-size: .95rem; flex-shrink: 0; }
+    .sb-footer { padding: 10px 8px; border-top: 1px solid var(--border); }
+
+    /* MAIN */
+    main { flex: 1; padding: 28px 30px; min-width: 0; }
+
+    /* CARDS */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; color: var(--text); }
+    .card-header { background: rgba(255,255,255,.03); border-bottom: 1px solid var(--border); border-radius: 12px 12px 0 0 !important; padding: 13px 18px; font-weight: 600; color: var(--text); font-size: .92rem; }
+
+    /* STAT CARDS */
+    .stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; position: relative; overflow: hidden; }
+    .stat::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; border-radius: 12px 0 0 12px; }
+    .s-total::before  { background: #f5a623; }
+    .s-avail::before  { background: #3dc77b; }
+    .s-active::before { background: var(--tg); }
+    .s-exp::before    { background: var(--muted); }
+    .s-life::before   { background: #9b6cff; }
+    .stat-label { font-size: .72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+    .stat-num { font-size: 2.1rem; font-weight: 800; line-height: 1; }
+    .s-total  .stat-num { color: #f5a623; }
+    .s-avail  .stat-num { color: #3dc77b; }
+    .s-active .stat-num { color: var(--tg); }
+    .s-exp    .stat-num { color: var(--muted); }
+    .s-life   .stat-num { color: #9b6cff; }
+
+    /* TABLE */
+    .table { --bs-table-bg: transparent; --bs-table-color: var(--text); --bs-table-striped-bg: rgba(255,255,255,.02); --bs-table-striped-color: var(--text); --bs-table-hover-bg: rgba(42,171,238,.06); --bs-table-hover-color: #fff; --bs-table-border-color: var(--border); }
+    .table thead th { background: rgba(255,255,255,.04); color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; border-color: var(--border); padding: 10px 14px; }
+    .table td { border-color: var(--border); padding: 10px 14px; vertical-align: middle; }
+
+    /* BADGES */
+    .badge { font-size: .7rem; font-weight: 700; padding: .3em .65em; border-radius: 6px; letter-spacing: .02em; }
+    .b-avail    { background: rgba(61,199,123,.15); color: #3dc77b; border: 1px solid rgba(61,199,123,.3); }
+    .b-active   { background: rgba(42,171,238,.15); color: var(--tg);  border: 1px solid rgba(42,171,238,.3); }
+    .b-expired  { background: rgba(125,154,181,.1); color: var(--sub); border: 1px solid rgba(125,154,181,.25); }
+    .b-lifetime { background: rgba(155,108,255,.15); color: #b794ff;  border: 1px solid rgba(155,108,255,.3); }
+
+    /* FORMS */
+    .form-control, .form-select { background: rgba(0,0,0,.4) !important; color: var(--text) !important; border: 1px solid var(--border) !important; border-radius: 8px !important; }
+    .form-control:focus, .form-select:focus { border-color: var(--tg) !important; box-shadow: 0 0 0 3px rgba(42,171,238,.13) !important; background: rgba(0,0,0,.5) !important; }
+    .form-control::placeholder { color: var(--muted); }
+    .input-group-text { background: rgba(0,0,0,.4) !important; color: var(--muted) !important; border: 1px solid var(--border) !important; border-radius: 8px !important; }
+    .form-label { color: var(--sub); font-size: .83rem; font-weight: 600; margin-bottom: 6px; }
+    .form-text { color: var(--muted) !important; font-size: .77rem; }
+    .form-check-input { background-color: rgba(0,0,0,.4); border-color: var(--border); }
+    .form-check-input:checked { background-color: var(--tg); border-color: var(--tg); }
+    .form-switch .form-check-input { width: 2.2em; height: 1.15em; }
+    textarea.form-control { font-family: 'Courier New', monospace; font-size: .84rem; line-height: 1.6; }
+
+    /* BUTTONS */
+    .btn-tg  { background: var(--tg); color: #fff; border: none; font-weight: 600; }
+    .btn-tg:hover  { background: var(--tg2); color: #fff; }
+    .btn-otg { background: transparent; color: var(--tg); border: 1px solid var(--tg); font-weight: 600; }
+    .btn-otg:hover { background: rgba(42,171,238,.1); color: var(--tg); }
+    .btn { border-radius: 8px !important; font-size: .85rem; }
+
+    /* ALERTS */
+    .alert { border-radius: 10px; font-size: .875rem; }
+    .alert-success { background: rgba(61,199,123,.1); border-color: rgba(61,199,123,.25); color: #3dc77b; }
+    .alert-danger   { background: rgba(255,100,100,.1); border-color: rgba(255,100,100,.25); color: #ff7070; }
+    .alert-warning  { background: rgba(245,166,35,.1); border-color: rgba(245,166,35,.25); color: #f5a623; }
+    .btn-close { filter: invert(0.7); }
+
+    /* LIST GROUP */
+    .list-group-item { background: transparent; border-color: var(--border); color: var(--text); }
+
+    /* MISC */
+    a { color: var(--tg); text-decoration: none; }
+    a:hover { color: #fff; }
+    code { color: #79c0ff; background: rgba(121,192,255,.1); padding: 1px 5px; border-radius: 4px; font-size: .83em; }
+    .page-title { font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 22px; display: flex; align-items: center; gap: 10px; }
+    .page-title .bi { color: var(--tg); }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+  </style>
+</head>
+<body>
+<div class="d-flex" style="min-height:100vh">
+  {% if session.logged_in %}
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-icon"><i class="bi bi-telegram"></i></div>
+      <div>
+        <div class="sb-title">SubManager</div>
+        <div class="sb-sub">Gestao de Assinaturas</div>
+      </div>
+    </div>
+
+    {% if group_id is defined %}
+    <div class="sb-group">
+      <div class="sb-group-label"><i class="bi bi-people-fill me-1"></i>Grupo</div>
+      <div class="sb-group-val">{{ group_id }}</div>
+    </div>
+    {% endif %}
+
+    <div class="sb-nav">
+      <ul class="nav flex-column gap-1">
+        <li><a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}"><i class="bi bi-speedometer2"></i>Dashboard</a></li>
+        <li><a href="{{ url_for('generate') }}" class="nav-link {% if request.endpoint == 'generate' %}active{% endif %}"><i class="bi bi-plus-circle"></i>Gerar Links</a></li>
+        <li><a href="{{ url_for('links') }}" class="nav-link {% if request.endpoint == 'links' %}active{% endif %}"><i class="bi bi-list-ul"></i>Todos os Links</a></li>
+        <li style="margin-top:8px;padding:4px 12px;font-size:.67rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:700">Configuracao</li>
+        <li><a href="{{ url_for('groups') }}" class="nav-link {% if request.endpoint == 'groups' %}active{% endif %}"><i class="bi bi-people"></i>Grupos</a></li>
+        <li><a href="{{ url_for('products') }}" class="nav-link {% if request.endpoint == 'products' %}active{% endif %}"><i class="bi bi-box-seam"></i>Produtos</a></li>
+        <li><a href="{{ url_for('apikeys') }}" class="nav-link {% if request.endpoint == 'apikeys' %}active{% endif %}"><i class="bi bi-key"></i>API Keys</a></li>
+        <li><a href="{{ url_for('webhook_docs') }}" class="nav-link {% if request.endpoint == 'webhook_docs' %}active{% endif %}"><i class="bi bi-discord"></i>Webhook Discord</a></li>
+        <li style="margin-top:8px;padding:4px 12px;font-size:.67rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:700">Sistema</li>
+        <li><a href="{{ url_for('settings') }}" class="nav-link {% if request.endpoint == 'settings' %}active{% endif %}"><i class="bi bi-bell"></i>Avisos de Expiracao</a></li>
+      </ul>
+    </div>
+
+    <div class="sb-footer">
+      <a href="{{ url_for('logout') }}" class="nav-link" style="color:#ff7070!important">
+        <i class="bi bi-box-arrow-right"></i>Sair
+      </a>
+    </div>
+  </aside>
+  {% endif %}
+
+  <main>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="alert alert-{{ cat }} alert-dismissible fade show d-flex align-items-center gap-2 mb-3">
+          <i class="bi {% if cat=='success' %}bi-check-circle-fill{% elif cat=='danger' %}bi-x-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %}"></i>
+          <span>{{ msg }}</span>
+          <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-title"><i class="bi bi-speedometer2"></i>Dashboard</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-2">
+    <div class="stat s-total">
+      <div class="stat-label">Total</div>
+      <div class="stat-num">{{ total }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-2">
+    <div class="stat s-avail">
+      <div class="stat-label">Disponiveis</div>
+      <div class="stat-num">{{ available }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-2">
+    <div class="stat s-active">
+      <div class="stat-label">Ativos</div>
+      <div class="stat-num">{{ active }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-2">
+    <div class="stat s-exp">
+      <div class="stat-label">Expirados</div>
+      <div class="stat-num">{{ expired }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-2">
+    <div class="stat s-life">
+      <div class="stat-label">Vitalicios</div>
+      <div class="stat-num">{{ lifetime }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-2 d-flex align-items-center">
+    <a href="{{ url_for('generate') }}" class="btn btn-tg w-100 py-3">
+      <i class="bi bi-plus-lg me-1"></i>Gerar Links
+    </a>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-8">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clock-history me-2" style="color:var(--tg)"></i>Links Recentes</span>
+        <a href="{{ url_for('links') }}" class="btn btn-otg btn-sm">Ver todos</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>Token</th><th>Duracao</th><th>Status</th><th>Usuario</th><th>Expira</th></tr></thead>
+          <tbody>
+            {% for r in recent %}
+            <tr>
+              <td><code>{{ r['token'][:16] }}&hellip;</code></td>
+              <td>{% if r['days']==0 %}<span class="badge b-lifetime">Vitalicio</span>{% else %}{{ r['days'] }}d{% endif %}</td>
+              <td>
+                {% if r['kicked'] %}<span class="badge b-expired">Expirado</span>
+                {% elif r['used'] %}<span class="badge b-active">Ativo</span>
+                {% else %}<span class="badge b-avail">Disponivel</span>{% endif %}
+              </td>
+              <td style="color:var(--sub)">{{ r['telegram_username'] or '&mdash;' }}</td>
+              <td style="color:var(--sub)">{% if r['days']==0 %}&infin;{% else %}{{ r['expires_at'][:10] if r['expires_at'] else '&mdash;' }}{% endif %}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center py-4" style="color:var(--muted)">Nenhum link ainda.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-4">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-journal-text me-2" style="color:var(--tg)"></i>Log de Acoes</div>
+      <div style="max-height:400px;overflow-y:auto">
+        <ul class="list-group list-group-flush">
+          {% for l in logs %}
+          <li class="list-group-item px-3 py-2">
+            <div class="d-flex justify-content-between align-items-center">
+              <small style="color:var(--tg);font-weight:700">{{ l['action'] }}</small>
+              <small style="color:var(--muted);font-size:.68rem">{{ l['created_at'][:16] }}</small>
+            </div>
+            <small style="color:var(--sub)">{{ l['detail'] }}</small>
+          </li>
+          {% else %}
+          <li class="list-group-item text-center py-4" style="color:var(--muted)">Sem registros.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

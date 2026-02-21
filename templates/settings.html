@@ -1,0 +1,88 @@
+﻿{% extends "base.html" %}
+{% block title %}Avisos de Expiracao{% endblock %}
+{% block content %}
+<div class="page-title"><i class="bi bi-bell"></i>Avisos de Expiracao</div>
+
+<div class="row g-4">
+  <div class="col-12 col-md-6">
+    <div class="card">
+      <div class="card-header">Configurar mensagem de aviso</div>
+      <div class="card-body p-4">
+        <form method="post">
+          <div class="mb-4">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="warn_enabled" name="warn_enabled"
+                     {% if warn_enabled == '1' %}checked{% endif %}>
+              <label class="form-check-label fw-semibold" for="warn_enabled"
+                     style="color:var(--tg)">Ativar aviso automatico</label>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">Quantos dias antes enviar o aviso</label>
+            <div class="input-group" style="max-width:180px">
+              <input type="number" name="warn_days_before" class="form-control"
+                     value="{{ warn_days_before }}" min="1" max="30" required>
+              <span class="input-group-text">dias</span>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">Mensagem enviada ao usuario</label>
+            <textarea name="warn_message" rows="6" class="form-control" required>{{ warn_message }}</textarea>
+            <div class="form-text mt-2">
+              Variaveis:
+              <code>{nome}</code> username do Telegram &bull;
+              <code>{dias}</code> dias restantes &bull;
+              <code>{data}</code> data de expiracao
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-tg w-100 py-2">
+            <i class="bi bi-save me-1"></i>Salvar Configuracoes
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6">
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-eye me-2" style="color:var(--tg)"></i>Preview da mensagem</div>
+      <div class="card-body">
+        <div id="preview" class="p-3 rounded" style="background:rgba(0,0,0,.35);font-size:.88rem;white-space:pre-wrap;min-height:100px;color:var(--text);border:1px solid var(--border)"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><i class="bi bi-info-circle me-2" style="color:var(--tg)"></i>Como funciona</div>
+      <div class="card-body">
+        <ul class="list-unstyled mb-0" style="line-height:2.1">
+          <li><i class="bi bi-check2 me-2" style="color:#3dc77b"></i>Aviso enviado em <strong>privado</strong> para o usuario</li>
+          <li><i class="bi bi-check2 me-2" style="color:#3dc77b"></i>Cada usuario recebe <strong>apenas uma vez</strong></li>
+          <li><i class="bi bi-check2 me-2" style="color:#3dc77b"></i>Links <strong>vitalicios</strong> nao recebem aviso</li>
+          <li><i class="bi bi-check2 me-2" style="color:#3dc77b"></i>Apos expirar o usuario e <strong>removido automaticamente</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const tpl = document.querySelector('[name="warn_message"]');
+const dInput = document.querySelector('[name="warn_days_before"]');
+const prev = document.getElementById('preview');
+function upd() {
+  const d = new Date();
+  d.setDate(d.getDate() + parseInt(dInput.value || 3));
+  let t = tpl.value;
+  t = t.replace(/{nome}/g, 'joaosilva');
+  t = t.replace(/{dias}/g, dInput.value);
+  t = t.replace(/{data}/g, d.toLocaleDateString('pt-BR'));
+  prev.textContent = t;
+}
+tpl.addEventListener('input', upd);
+dInput.addEventListener('input', upd);
+upd();
+</script>
+{% endblock %}

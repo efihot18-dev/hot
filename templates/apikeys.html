@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}API Keys{% endblock %}
+{% block content %}
+<div class="page-title"><i class="bi bi-key"></i>API Keys</div>
+
+<div class="row g-4">
+  <div class="col-12 col-md-4">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-plus-circle me-2" style="color:var(--tg)"></i>Gerar Nova Chave</div>
+      <div class="card-body p-4">
+        <form method="post" action="{{ url_for('apikey_add') }}">
+          <div class="mb-4">
+            <label class="form-label">Rotulo da chave</label>
+            <input type="text" name="label" class="form-control" placeholder="Ex: Bot do Discord #vendas">
+            <div class="form-text">Identifica onde esta chave e usada.</div>
+          </div>
+          <button type="submit" class="btn btn-tg w-100 py-2">
+            <i class="bi bi-key me-1"></i>Gerar Chave
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mt-3 p-3" style="background:rgba(42,171,238,.07);border-color:rgba(42,171,238,.2)">
+      <div class="sb-group-label mb-1"><i class="bi bi-info-circle me-1"></i>Como usar</div>
+      <div style="color:var(--sub);font-size:.8rem;line-height:1.7">
+        Envie a chave no header:<br>
+        <code>Authorization: Bearer sk_...</code><br><br>
+        Endpoint: <code>POST /api/purchase</code><br>
+        Veja a documentacao em <a href="{{ url_for('webhook_docs') }}">Webhook Discord</a>.
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-8">
+    <div class="card">
+      <div class="card-header">Chaves Cadastradas</div>
+      {% if keys %}
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Rotulo</th>
+              <th>Chave</th>
+              <th>Status</th>
+              <th>Criada em</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for k in keys %}
+            <tr>
+              <td style="color:var(--muted)">{{ k.id }}</td>
+              <td style="font-weight:600">{{ k.label }}</td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <code id="key-{{ k.id }}" style="font-size:.75rem;word-break:break-all">{{ k.key }}</code>
+                  <button class="btn btn-sm btn-otg flex-shrink-0" onclick="cpKey('{{ k.key }}', this)" title="Copiar">
+                    <i class="bi bi-copy"></i>
+                  </button>
+                </div>
+              </td>
+              <td>
+                {% if k.active %}
+                <span class="badge b-active">Ativa</span>
+                {% else %}
+                <span class="badge b-expired">Revogada</span>
+                {% endif %}
+              </td>
+              <td style="color:var(--muted);font-size:.8rem">{{ k.created_at[:16] }}</td>
+              <td class="text-end">
+                {% if k.active %}
+                <form method="post" action="{{ url_for('apikey_revoke', kid=k.id) }}" class="d-inline"
+                      onsubmit="return confirm('Revogar esta chave?')">
+                  <button class="btn btn-sm btn-otg" title="Revogar">
+                    <i class="bi bi-x-circle"></i>
+                  </button>
+                </form>
+                {% endif %}
+                <form method="post" action="{{ url_for('apikey_delete', kid=k.id) }}" class="d-inline"
+                      onsubmit="return confirm('Excluir esta chave permanentemente?')">
+                  <button class="btn btn-sm" style="color:#ff7070;border:1px solid rgba(255,100,100,.3);border-radius:8px" title="Excluir">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="card-body text-center py-5" style="color:var(--muted)">
+        <i class="bi bi-key" style="font-size:2.5rem;display:block;margin-bottom:12px;opacity:.4"></i>
+        Nenhuma chave criada ainda.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+function cpKey(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.innerHTML = '<i class="bi bi-check2"></i>';
+    setTimeout(() => btn.innerHTML = '<i class="bi bi-copy"></i>', 1500);
+  });
+}
+</script>
+{% endblock %}

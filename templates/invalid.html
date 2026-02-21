@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Link Invalido</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    body { background:#0f1923; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; font-family:'Segoe UI',sans-serif; }
+    .box { background:#1c2733; border:1px solid #2a3a4a; border-radius:16px; max-width:380px; width:90%; padding:36px 32px; text-align:center; }
+    .err-circle { width:70px;height:70px;border-radius:50%;background:rgba(255,100,100,.15);border:2px solid rgba(255,100,100,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:2rem;color:#ff7070; }
+    h5 { color:#e8f0f8; font-weight:700; }
+    p { color:#a8bfd0; font-size:.9rem; }
+    small { color:#7d9ab5;font-size:.78rem; }
+  </style>
+</head>
+<body>
+<div class="box">
+  <div class="err-circle"><i class="bi bi-exclamation-triangle-fill"></i></div>
+  <h5>{{ reason }}</h5>
+  <p>Entre em contato com o suporte se acredita que isso e um erro.</p>
+</div>
+</body>
+</html>
