@@ -3,7 +3,11 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
   <div class="page-title mb-0"><i class="bi bi-list-ul"></i>Todos os Links</div>
-  <div class="d-flex gap-2">
+  <div class="d-flex gap-2 align-items-center">
+    <button class="btn btn-otg btn-sm px-3" onclick="copySelected()" id="copySelBtn" disabled style="position:relative">
+      <i class="bi bi-clipboard me-1"></i>Copiar Selecionados
+      <span id="selBadge" class="badge" style="display:none;position:absolute;top:-6px;right:-6px;background:var(--tg);color:#fff;font-size:.65rem;min-width:18px;border-radius:10px">0</span>
+    </button>
     <button class="btn btn-otg btn-sm px-3" onclick="copyAllLinks()" id="copyAllBtn" {% if not rows %}disabled{% endif %}>
       <i class="bi bi-clipboard me-1"></i>Copiar Todos
     </button>
@@ -26,6 +30,7 @@
   <div class="table-responsive">
     <table class="table table-hover mb-0">
       <thead><tr>
+        <th style="width:36px"><input type="checkbox" id="selectAll" onchange="toggleAll(this)" title="Selecionar todos" style="cursor:pointer;accent-color:var(--tg)"></th>
         <th>#</th>
         <th>Link</th>
         <th>Duracao</th>
@@ -39,6 +44,7 @@
       <tbody>
         {% for r in rows %}
         <tr>
+          <td><input type="checkbox" class="link-check" data-link="{{ base_url }}/acesso/{{ r['token'] }}" onchange="updateSelection()" style="cursor:pointer;accent-color:var(--tg)"></td>
           <td style="color:var(--muted)">{{ r['id'] }}</td>
           <td>
             <div class="input-group input-group-sm" style="min-width:220px">
@@ -97,7 +103,7 @@
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="9" class="text-center py-5" style="color:var(--muted)">Nenhum link encontrado.</td></tr>
+        <tr><td colspan="10" class="text-center py-5" style="color:var(--muted)">Nenhum link encontrado.</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -109,6 +115,49 @@ function cpLink(text, btn) {
   navigator.clipboard.writeText(text).then(() => {
     btn.innerHTML = '<i class="bi bi-check2"></i>';
     setTimeout(() => btn.innerHTML = '<i class="bi bi-copy"></i>', 1500);
+  });
+}
+
+function updateSelection() {
+  const checks = document.querySelectorAll('.link-check');
+  const checked = document.querySelectorAll('.link-check:checked');
+  const btn = document.getElementById('copySelBtn');
+  const badge = document.getElementById('selBadge');
+  const allCb = document.getElementById('selectAll');
+  btn.disabled = checked.length === 0;
+  if (checked.length > 0) {
+    badge.style.display = '';
+    badge.textContent = checked.length;
+  } else {
+    badge.style.display = 'none';
+  }
+  allCb.checked = checks.length > 0 && checked.length === checks.length;
+  allCb.indeterminate = checked.length > 0 && checked.length < checks.length;
+}
+
+function toggleAll(cb) {
+  document.querySelectorAll('.link-check').forEach(c => c.checked = cb.checked);
+  updateSelection();
+}
+
+function copySelected() {
+  const checked = document.querySelectorAll('.link-check:checked');
+  if (!checked.length) return;
+  const links = [...checked].map(c => c.dataset.link).join('\n');
+  const btn = document.getElementById('copySelBtn');
+  navigator.clipboard.writeText(links).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-check2 me-1"></i>' + checked.length + ' copiado(s)!';
+    btn.classList.remove('btn-otg');
+    btn.classList.add('btn-tg');
+    setTimeout(() => {
+      btn.innerHTML = orig;
+      btn.classList.remove('btn-tg');
+      btn.classList.add('btn-otg');
+      updateSelection();
+    }, 2000);
+  }).catch(() => {
+    prompt('Copie os links:', links);
   });
 }
 
@@ -128,7 +177,6 @@ function copyAllLinks() {
       btn.classList.add('btn-otg');
     }, 2000);
   }).catch(() => {
-    // Fallback: show in prompt
     prompt('Copie os links:', links);
   });
 }
